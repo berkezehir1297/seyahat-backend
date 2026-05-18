@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Mail; // Mail göndermek için eklendi
+use Illuminate\Support\Facades\Http;
 
 class AuthController extends Controller
 {
@@ -76,26 +76,28 @@ class AuthController extends Controller
             ]
         );
 
-        $resetLink = 'http://localhost:4200/reset-password?token=' . $token . '&email=' . $request->email;
+        $resetLink = 'https://seyahat-frontend.onrender.com/reset-password?token=' . $token . '&email=' . $request->email;
 
-        // --- GERÇEK MAİL GÖNDERİMİ ---
         try {
-            Mail::send([], [], function ($message) use ($request, $resetLink) {
-                $message->to($request->email)
-                    ->subject('Seyahat Planlama - Şifre Sıfırlama Talebi')
-                    ->html("
-                        <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee;'>
-                            <h2 style='color: #0d6efd;'>Şifrenizi Sıfırlayın</h2>
-                            <p>Merhaba, şifrenizi sıfırlamak için bir talep aldık. Aşağıdaki butona tıklayarak yeni şifrenizi belirleyebilirsiniz:</p>
-                            <a href='{$resetLink}' style='display: inline-block; padding: 10px 20px; background-color: #0d6efd; color: #fff; text-decoration: none; border-radius: 5px; margin-top: 10px;'>Şifremi Sıfırla</a>
-                            <p style='margin-top: 20px; font-size: 12px; color: #777;'>Eğer bu talebi siz yapmadıysanız, lütfen bu e-postayı dikkate almayın.</p>
-                        </div>
-                    ");
-            });
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . env('MAIL_PASSWORD'),
+                'Content-Type' => 'application/json',
+            ])->post('https://api.resend.com/emails', [
+                'from' => 'onboarding@resend.dev',
+                'to' => [$request->email],
+                'subject' => 'Seyahat Planlama - Şifre Sıfırlama Talebi',
+                'html' => "
+                    <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee;'>
+                        <h2 style='color: #0d6efd;'>Şifrenizi Sıfırlayın</h2>
+                        <p>Merhaba, şifrenizi sıfırlamak için bir talep aldık. Aşağıdaki butona tıklayarak yeni şifrenizi belirleyebilirsiniz:</p>
+                        <a href='{$resetLink}' style='display: inline-block; padding: 10px 20px; background-color: #0d6efd; color: #fff; text-decoration: none; border-radius: 5px; margin-top: 10px;'>Şifremi Sıfırla</a>
+                        <p style='margin-top: 20px; font-size: 12px; color: #777;'>Eğer bu talebi siz yapmadıysanız, lütfen bu e-postayı dikkate almayın.</p>
+                    </div>
+                ",
+            ]);
 
             return response()->json([
                 'message' => 'Şifre sıfırlama maili başarıyla gönderildi.',
-                'reset_link_debug' => $resetLink // Test aşamasında konsolda görmek için kalabilir
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Mail gönderilirken bir hata oluştu: ' . $e->getMessage()], 500);
@@ -122,11 +124,9 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
         if ($user) {
-            // Şifreyi güncelle
             $user->password = Hash::make($request->password);
             $user->save();
 
-            // Kullanılan token'ı temizle
             DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
             return response()->json(['message' => 'Şifreniz başarıyla güncellendi. Yeni şifrenizle giriş yapabilirsiniz.']);
