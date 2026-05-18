@@ -12,8 +12,11 @@ return [
 
     'allowed_methods' => ['*'],
 
-    // Sadece Angular projenin (4200 portu) erişmesine izin veriyoruz
-    'allowed_origins' => ['http://localhost:4200'], 
+    // Hem canlıdaki Render sitene hem de lokal Angular'a izin verdik
+    'allowed_origins' => [
+        'http://localhost:4200',
+        'https://seyahat-frontend.onrender.com'
+    ], 
 
     'allowed_origins_patterns' => [],
 
@@ -23,7 +26,7 @@ return [
 
     'max_age' => 0,
 
-    // İleride login işlemleri (cookie/session) yapabilmen için true yaptık
+    // Login işlemleri (cookie/session/token) için true kalmalı
     'supports_credentials' => true, 
 
 ];
