@@ -12,11 +12,8 @@ return [
 
     'allowed_methods' => ['*'],
 
-    // Hem canlıdaki Render sitene hem de lokal Angular'a izin verdik
-    'allowed_origins' => [
-        'http://localhost:4200',
-        'https://seyahat-frontend.onrender.com'
-    ], 
+    // Dünyadaki tüm adreslerden gelen isteklere izin veriyoruz (CORS hatasını kökten çözer)
+    'allowed_origins' => ['*'], 
 
     'allowed_origins_patterns' => [],
 
@@ -26,7 +23,7 @@ return [
 
     'max_age' => 0,
 
-    // Login işlemleri (cookie/session/token) için true kalmalı
-    'supports_credentials' => true, 
+    // allowed_origins '*' (her yer) olduğunda supports_credentials güvenlik nedeniyle false olmalıdır
+    'supports_credentials' => false, 
 
 ];
