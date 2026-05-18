@@ -80,13 +80,13 @@ class AuthController extends Controller
 
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . env('MAIL_PASSWORD'),
+                'Authorization' => 'Bearer ' . env('BREVO_API_KEY'),
                 'Content-Type' => 'application/json',
-            ])->post('https://api.resend.com/emails', [
-                'from' => 'onboarding@resend.dev',
-                'to' => [$request->email],
+            ])->post('https://api.brevo.com/v3/smtp/email', [
+                'sender' => ['name' => 'Seyahat Planlama', 'email' => 'berkezehir12@gmail.com'],
+                'to' => [['email' => $request->email]],
                 'subject' => 'Seyahat Planlama - Şifre Sıfırlama Talebi',
-                'html' => "
+                'htmlContent' => "
                     <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee;'>
                         <h2 style='color: #0d6efd;'>Şifrenizi Sıfırlayın</h2>
                         <p>Merhaba, şifrenizi sıfırlamak için bir talep aldık. Aşağıdaki butona tıklayarak yeni şifrenizi belirleyebilirsiniz:</p>
