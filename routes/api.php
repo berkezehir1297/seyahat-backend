@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan; // <-- Burayı ekledik, yoksa temizleme rotası patlar!
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HotelController;
 use App\Http\Controllers\TravelRouteController;
@@ -22,18 +23,9 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::get('/hotels', [HotelController::class, 'index']);
 
 // --- 3. SEYAHAT ROTALARI (Kişiye Özel) ---
-
-// Yeni rota kaydetme (POST isteği)
 Route::post('/travel-routes', [TravelRouteController::class, 'store']);
-
-// Kullanıcıya özel rotaları getirme (GET isteği)
 Route::get('/travel-routes/{userId}', [TravelRouteController::class, 'index']);
-
-// --- SİLME ROTASI BURAYA EKLENDİ ---
-// Angular tarafında servisindeki URL'yi burayla eşitlemelisin.
-// Eğer servisinde 'routes/id' yazıyorsa burayı da 'routes/{id}' yap.
 Route::delete('/travel-routes/{id}', [TravelRouteController::class, 'destroy']);
-
 
 // --- 4. SİSTEM TEST VE YARDIMCI ROTALAR ---
 Route::get('/merhaba', function () {
@@ -44,12 +36,14 @@ Route::get('/merhaba', function () {
     ]);
 });
 
-// Giriş yapmış kullanıcının bilgilerini getirme
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// Sunucu önbelleğini sıfırlamak için kullandığımız rota
 Route::get('/clear-cache', function() {
     Artisan::call('config:clear');
     Artisan::call('cache:clear');
+    Artisan::call('route:clear'); // Rota önbelleğini de temizleyelim ki POST hatası kalmasın
     return "Sunucu önbelleği başarıyla temizlendi!";
 });
